@@ -21,6 +21,38 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
+app.MapGet("/customer", () =>
+{
+    return customers;
+});
+
+app.MapGet("/customer/{id}", (int id) =>
+{
+    Customer customer = customers.FirstOrDefault(cu => cu.Id == id);
+    if (customer == null)
+    {
+        return Results.NotFound();
+    }
+    customer.ServiceTickets = serviceTickets.Where(st => st.CustomerId == id).ToList();
+    return Results.Ok(customer);
+});
+
+app.MapGet("/employee", () =>
+{
+    return employees;
+});
+
+app.MapGet("/employee/{id}", (int id) =>
+{
+    Employee employee = employees.FirstOrDefault(e => e.Id == id);
+    if (employee == null)
+    {
+        return Results.NotFound();
+    }
+    employee.ServiceTickets = serviceTickets.Select(x => new ServiceTicket { CustomerId = x.CustomerId, EmployeeId = x.EmployeeId, DateCompleted = x.DateCompleted, Description = x.Description, Emergency = x.Emergency, Id = x.Id })
+   .Where(st => st.EmployeeId == id).ToList();
+    return Results.Ok(employee);
+});
 
 app.MapGet("/servicetickets", () =>
 {
