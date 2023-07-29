@@ -1,3 +1,8 @@
+using HoneyRaesAPI.Models;
+List<Customer> customers = new List<Customer> { };
+List<Employee> employees = new List<Employee> { };
+List<ServiceTicket> serviceTickets = new List<ServiceTicket> { };
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
@@ -16,33 +21,52 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
-var summaries = new[]
+app.MapGet("/customer", () =>
 {
-    "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
-};
-
-app.MapGet("/weatherforecast", () =>
-{
-    var forecast =  Enumerable.Range(1, 5).Select(index =>
-        new WeatherForecast
-        (
-            DateOnly.FromDateTime(DateTime.Now.AddDays(index)),
-            Random.Shared.Next(-20, 55),
-            summaries[Random.Shared.Next(summaries.Length)]
-        ))
-        .ToArray();
-    return forecast;
-})
-.WithName("GetWeatherForecast")
-.WithOpenApi();
-
-app.MapGet("/hello", () =>
-{
-    return "hello";
+    return customers;
 });
-app.Run();
 
-record WeatherForecast(DateOnly Date, int TemperatureC, string? Summary)
+app.MapGet("/customer/{id}", (int id) =>
 {
-    public int TemperatureF => 32 + (int)(TemperatureC / 0.5556);
-}
+    Customer customer = customers.FirstOrDefault(cu => cu.Id == id);
+    if (customer == null)
+    {
+        return Results.NotFound();
+    }
+    customer.ServiceTickets = serviceTickets.Where(st => st.CustomerId == id).ToList();
+    return Results.Ok(customer);
+});
+
+app.MapGet("/employee", () =>
+{
+    return employees;
+});
+
+app.MapGet("/employee/{id}", (int id) =>
+{
+    Employee employee = employees.FirstOrDefault(e => e.Id == id);
+    if (employee == null)
+    {
+        return Results.NotFound();
+    }
+    employee.ServiceTickets = serviceTickets.Where(st => st.EmployeeId == id).ToList();
+    return Results.Ok(employee);
+});
+
+app.MapGet("/servicetickets", () =>
+{
+    return serviceTickets;
+});
+
+app.MapGet("/servicetickets/{id}", (int id) =>
+{
+    ServiceTicket serviceTicket = serviceTickets.FirstOrDefault(st => st.Id == id);
+    if (serviceTicket == null)
+    {
+        return Results.NotFound();
+    }
+    serviceTicket.Employee = employees.FirstOrDefault(e => e.Id == serviceTicket.EmployeeId);
+    return Results.Ok(serviceTicket);
+});
+
+app.Run();
