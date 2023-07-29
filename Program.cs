@@ -1,7 +1,7 @@
 using HoneyRaesAPI.Models;
 List<Customer> customers = new List<Customer> { };
 List<Employee> employees = new List<Employee> { };
-List<ServiceTicket> serviceTickets = new List<ServiceTicket> { }; = new List<HoneyRaesAPI.Models.ServiceTicket> { };
+List<ServiceTicket> serviceTickets = new List<ServiceTicket> { };
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -49,8 +49,7 @@ app.MapGet("/employee/{id}", (int id) =>
     {
         return Results.NotFound();
     }
-    employee.ServiceTickets = serviceTickets.Select(x => new ServiceTicket { CustomerId = x.CustomerId, EmployeeId = x.EmployeeId, DateCompleted = x.DateCompleted, Description = x.Description, Emergency = x.Emergency, Id = x.Id })
-   .Where(st => st.EmployeeId == id).ToList();
+    employee.ServiceTickets = serviceTickets.Where(st => st.EmployeeId == id).ToList();
     return Results.Ok(employee);
 });
 
@@ -61,7 +60,13 @@ app.MapGet("/servicetickets", () =>
 
 app.MapGet("/servicetickets/{id}", (int id) =>
 {
-    return serviceTickets.FirstOrDefault(st => st.Id == id);
+    ServiceTicket serviceTicket = serviceTickets.FirstOrDefault(st => st.Id == id);
+    if (serviceTicket == null)
+    {
+        return Results.NotFound();
+    }
+    serviceTicket.Employee = employees.FirstOrDefault(e => e.Id == serviceTicket.EmployeeId);
+    return Results.Ok(serviceTicket);
 });
 
 app.Run();
